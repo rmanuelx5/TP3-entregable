@@ -53,9 +53,9 @@ int main(void)
 		verificacion = DHTRead(&temperatura, &humedad);
 		//verif = 0 hay error, verif=1 se lee correctamente
 		if (verificacion){
-				//sprintf(msg1, "TEMP: %02d °C HUM: %02d\% FECHA: %02d/%02d/%02d HORA:%02d:%02d:%03d\r\n", temperatura, humedad, )
-				sprintf(msg1, "TEMP: %02d °C HUM: %02d%% \r \n ", temperatura, humedad);
-			}
+			//sprintf(msg1, "TEMP: %02d °C HUM: %02d\% FECHA: %02d/%02d/%02d HORA:%02d:%02d:%03d\r\n", temperatura, humedad, )
+			sprintf(msg1, "TEMP: %02d °C HUM: %02d%% \r \n ", temperatura, humedad);
+		}
 		else {
 			sprintf(msg1, "error en dht");
 		}
