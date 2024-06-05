@@ -40,6 +40,7 @@ int main(void)
 {	
 	uint8_t temperatura;
 	uint8_t humedad;
+	uint8_t verificacion;
 	
 	volatile char dato = 0;
 	
@@ -49,8 +50,8 @@ int main(void)
 	
 	while(1)
 	{
-		uint8_t verificacion = DHTRead(&temperatura, &humedad);
-		
+		verificacion = DHTRead(&temperatura, &humedad);
+		//verif = 0 hay error, verif=1 se lee correctamente
 		if (verificacion){
 				//sprintf(msg1, "TEMP: %02d °C HUM: %02d\% FECHA: %02d/%02d/%02d HORA:%02d:%02d:%03d\r\n", temperatura, humedad, )
 				sprintf(msg1, "TEMP: %02d °C HUM: %02d\% \r \n ", temperatura, humedad);
@@ -58,6 +59,7 @@ int main(void)
 		else {
 			sprintf(msg1, "error en dht");
 		}
+		
 		SerialPort_Wait_For_TX_Buffer_Free(); // Espero a que el canal de transmisión este libre (bloqueante)
 		//cada 2 segundos mando a terminal
 		

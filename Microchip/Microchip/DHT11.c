@@ -17,8 +17,9 @@
 #include "DHT11.h"
 
 
-//prototipo funciones internas
-//void pulsoInicio(uint8_t);
+//prototipos de funciones internas
+void pulsoInicio(uint8_t);
+uint8_t leerBit(void);
 
 
 void DHT11_Init() {
@@ -37,12 +38,10 @@ uint8_t DHTRead(uint8_t *temperatura, uint8_t *humedad){
 		for (uint8_t i = 0; i < 5; i++) {
 			lectura[i]=0; //inicializo para realizar el OR con los datos
 			for (uint8_t j = 0; j < 8; j++) {
-				while (!(PINC & (1 << DHT11_PIN))); // Esperar el comienzo del bit
-					uint8_t bit = reciboBit()
-				_delay_us(30); //verifico si se mantiene el valor
-				if (PINC & (1 << DHT11_PIN))
-					lectura[i] |= (1 << (7 - j));
-				while (PINC & (1 << DHT11_PIN)); // Esperar el fin del bit
+				uint8_t bit = leerBit();
+				if (bit != 2) //si bit es 2 es error
+					lectura[i] |= (bit << (7 - j)); //almaceno en lectura
+				else return 0; //codigo de error
 			}	
 		}
 	}
@@ -91,8 +90,23 @@ void pulsosInicio(uint8_t control){
 	 control = 1;	
 }
 
-/*uint8_t leerBit(){
-	if
-	
+uint8_t leerBit(){
+	uint8_t contador = 0;
+	while (PINC & (1 << DHT11_PIN)); //espero que comience la transmision
+	_delay_us(50);
+	while (PINC & (1 << DHT11_PIN)){
+		contador++;
+		_delay_us(1);
+	}
+	//se lee cuanto tiempo estuvo en alto el bit
+	//si estuvo entre 26 y 28 us alto, el bit es 0, con una tolerancia de +-4ms 
+	if ((contador > 22) && (contador < 32)) // el bit es 0
+		return 0;
+	//si estuvo entre 65 y 75 us alto, el bit es 1, con una tolerancia de +-5ms
+	else if ((contador > 65) && (contador < 75)){
+		return 1;
+		}
+	else 
+		return 2; //error en lectura
 }
-*/
+
