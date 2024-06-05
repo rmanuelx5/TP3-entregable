@@ -27,8 +27,8 @@ int main(void)
 
 #define BR9600 (0x67)	// 0x67=103 configura BAUDRATE=9600@16MHz
 
-//mensajes de bienvenida y despedida
-//char msg1[] = "TEMP: %02d °C HUM: %02d\% FECHA: %02d/%02d/%02d HORA:%02d:%02d:%03d\r\n";//temp, hum, dd/mm/aa, hh/mm/sss
+
+//char msg1[] = "TEMP: %02d °C HUM: %02d\% FECHA: %02d/%02d/%02d HORA:%02d:%02d:%03d\r\n"; //temp, hum, dd/mm/aa, hh/mm/sss
 char  msg1[] = "prueba";
 uint8_t activo= 0; //usado como variable de control
 volatile char RX_Buffer=0;
