@@ -14,24 +14,31 @@
  */
  
 #define DHT11_PIN PC0
- 
+#include "DHT11.h"
+
+
+//prototipo funciones internas
+//void pulsoInicio(uint8_t);
+
+
 void DHT11_Init() {
 	DDRC |= (1 << DHT11_PIN); // Configurar el pin como salida
-	PORTC |= (1 << DHT11_PIN); // Activar resistencia pull-up
+	PORTC |= (1 << DHT11_PIN); // Activar pull-up
 }
  
-void DHTRead(uint8_t *temperatura, uint8_t *humedad, uint8_t *verificacion){
+uint8_t DHTRead(uint8_t *temperatura, uint8_t *humedad){
 	uint8_t control = 0;
 	uint8_t lectura[5] = {0};
 	//funcion interna señal inicio - esperar   
 	pulsosInicio(control);
-	// Leer 40 bits de datos
 	
+	// Leer 40 bits de datos
 	if (control){
 		for (uint8_t i = 0; i < 5; i++) {
 			lectura[i]=0; //inicializo para realizar el OR con los datos
 			for (uint8_t j = 0; j < 8; j++) {
 				while (!(PINC & (1 << DHT11_PIN))); // Esperar el comienzo del bit
+					uint8_t bit = reciboBit()
 				_delay_us(30); //verifico si se mantiene el valor
 				if (PINC & (1 << DHT11_PIN))
 					lectura[i] |= (1 << (7 - j));
@@ -45,18 +52,16 @@ void DHTRead(uint8_t *temperatura, uint8_t *humedad, uint8_t *verificacion){
 	uint8_t checksum = lectura[0] + lectura[1] + lectura[2] + lectura[3];
 	if (checksum != lectura[4])
 		//hubo un error de lectura
-		verificacion = 0;
-	else 
-		verificacion = 1;
+		return 0;
 	
-
-	temperatura = lectura[2];
-	humedad = lectura[0];
+	*temperatura = (uint8_t) lectura[2];
+	*humedad = (uint8_t) lectura[0];
 	//redondeo decimales
 	if(lectura[1] >= 50)
-		humedad++;
+		*humedad++;
 	if(lectura[3] >= 50)
-		temperatura++;
+		*temperatura++;
+	return 1;
 }
 
 
@@ -86,8 +91,8 @@ void pulsosInicio(uint8_t control){
 	 control = 1;	
 }
 
-uint8_t leerBit(){
+/*uint8_t leerBit(){
 	if
 	
 }
-
+*/
