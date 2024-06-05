@@ -54,16 +54,16 @@ int main(void)
 		//verif = 0 hay error, verif=1 se lee correctamente
 		if (verificacion){
 				//sprintf(msg1, "TEMP: %02d °C HUM: %02d\% FECHA: %02d/%02d/%02d HORA:%02d:%02d:%03d\r\n", temperatura, humedad, )
-				sprintf(msg1, "TEMP: %02d °C HUM: %02d\% \r \n ", temperatura, humedad);
+				sprintf(msg1, "TEMP: %02d °C HUM: %02d%% \r \n ", temperatura, humedad);
 			}
 		else {
 			sprintf(msg1, "error en dht");
 		}
 		
 		SerialPort_Wait_For_TX_Buffer_Free(); // Espero a que el canal de transmisión este libre (bloqueante)
-		//cada 2 segundos mando a terminal
-		
+		//cada 2 segundos mando a terminal		
 		SerialPort_Send_String(msg1);	
+		
 		SerialPort_Wait_Until_New_Data();	  // Polling - Bloqueante, puede durar indefinidamente.
 		dato = SerialPort_Recive_Data();
 

@@ -15,10 +15,14 @@
  
 #define DHT11_PIN PC0
 #include "DHT11.h"
+#define F_CPU 16000000UL
+#include <avr/io.h>
+#include <stdio.h>
+#include "serialPort.h"
 
 
 //prototipos de funciones internas
-void pulsoInicio(uint8_t);
+uint8_t pulsoInicio(void);
 uint8_t leerBit(void);
 
 
@@ -28,13 +32,11 @@ void DHT11_Init() {
 }
  
 uint8_t DHTRead(uint8_t *temperatura, uint8_t *humedad){
-	uint8_t control = 0;
 	uint8_t lectura[5] = {0};
 	//funcion interna señal inicio - esperar   
-	pulsosInicio(control);
 	
 	// Leer 40 bits de datos
-	if (control){
+	if (pulsoInicio()){
 		for (uint8_t i = 0; i < 5; i++) {
 			lectura[i]=0; //inicializo para realizar el OR con los datos
 			for (uint8_t j = 0; j < 8; j++) {
@@ -45,6 +47,18 @@ uint8_t DHTRead(uint8_t *temperatura, uint8_t *humedad){
 			}	
 		}
 	}
+	
+		#define BR9600 (0x67)	// 0x67=103 configura BAUDRATE=9600@16MHz
+		SerialPort_Init(BR9600); 		// Inicializo formato 8N1 y BAUDRATE = 9600bps
+		SerialPort_TX_Enable();			// Activo el Transmisor del Puerto Serie
+		SerialPort_RX_Enable();			// Activo el Receptor del Puerto Serie
+	
+	char  msg1[50];
+	sprintf(msg1, "Datos obtenidos: %02d, %02d, %02d, %02d, %02d // ", lectura[0], lectura[1], lectura[2], lectura[3], lectura[4]);
+	SerialPort_Wait_For_TX_Buffer_Free(); // Espero a que el canal de transmisión este libre (bloqueante)
+	//cada 2 segundos mando a terminal
+	SerialPort_Send_String(msg1);
+	
 	
 	// verifico que la lectura sea válida
 	//segun la datasheet lectura[4] es igual a la sumatoria de lectura[0]..[3]
@@ -64,30 +78,28 @@ uint8_t DHTRead(uint8_t *temperatura, uint8_t *humedad){
 }
 
 
-void pulsosInicio(uint8_t control){
-	 // Envío señal de inicio y espero 18ms hasta que DHT la detecte
-	 DDRC |= (1 << DHT11_PIN);
-	 PORTC &= ~(1 << DHT11_PIN);
-	 _delay_ms(18);	 
-	
-	 //Señal en alto y espero 40ms	
-	 PORTC |= (1 << DHT11_PIN);
-	 _delay_us(40);
-	 DDRC &= ~(1 << DHT11_PIN);
-	 
-	 // Esperar respuesta del sensor
-	 _delay_us(80);
-	 if (PINC & (1 << DHT11_PIN)){
-		control = 0; // Si el pin sigue alto, hay un error
-		return;
-	 }
-	 _delay_us(80);
-	 if (!(PINC & (1 << DHT11_PIN))){
-		control = 0; // Si el pin sigue bajo, hay un error
-		return;
-	 }
-	 //Se inicio correctamente el sensor
-	 control = 1;	
+uint8_t pulsoInicio(){
+	// Envío señal de inicio y espero 18ms hasta que DHT la detecte
+	DDRC |= (1 << DHT11_PIN);
+	PORTC &= ~(1 << DHT11_PIN);
+	_delay_ms(18);
+
+	//Señal en alto y espero 40ms
+	PORTC |= (1 << DHT11_PIN);
+	_delay_us(40);
+	DDRC &= ~(1 << DHT11_PIN);
+
+	// Esperar respuesta del sensor
+	_delay_us(80);
+	if (PINC & (1 << DHT11_PIN)){
+		return 0; // Si el pin sigue alto, hay un error
+	}
+	_delay_us(80);
+	if (!(PINC & (1 << DHT11_PIN))){
+		return 0; // Si el pin sigue bajo, hay un error
+	}
+	//Se inicio correctamente el sensor
+	return 1;
 }
 
 uint8_t leerBit(){
