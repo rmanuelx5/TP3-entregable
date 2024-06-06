@@ -12,6 +12,12 @@
 #define F_CPU 16000000UL
 #include <avr/io.h>
 #include <util/delay.h>
+#define DHT11_PIN PC0
+#include <stdio.h>
+
+//prueba
+#include "serialPort.h"
+#define BR9600 (0x67)	// 0x67=103 configura BAUDRATE=9600@16MHz
 
 uint8_t DHTRead(uint8_t *temperatura, uint8_t *humedad);
 

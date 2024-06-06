@@ -13,13 +13,9 @@
 	empieza transmision
  */
  
-#define DHT11_PIN PC0
 #include "DHT11.h"
-#define F_CPU 16000000UL
-#include <avr/io.h>
-#include <stdio.h>
-#include "serialPort.h"
-#define BR9600 (0x67) // 0x67=103 configura BAUDRATE=9600@16MHz
+ 
+
 
 
 //prototipos de funciones internas
