@@ -60,12 +60,12 @@ uint8_t DHTRead(uint8_t *temperatura, uint8_t *humedad){
 		return 0; // Si pulsoInicio falla, retorna 0
 	}
 
-	Debbug(lectura);
-	/*
+	//Debbug(lectura);
+	
 	uint8_t checksum = lectura[0] + lectura[1] + lectura[2] + lectura[3];
 	if (checksum != lectura[4]) {
 		return 0; // Error en la lectura
-	}*/
+	}
 
 	*temperatura = lectura[2];
 	*humedad = lectura[0];
@@ -83,7 +83,8 @@ uint8_t pulsoInicio(){
 
 	// Sube el pin y espera 20-40us
 	PORTC |= (1 << DHT11_PIN);
-	_delay_us(20);
+	
+	//_delay_us(20);
 	DDRC &= ~(1 << DHT11_PIN);  // Configura el pin como entrada
 
 	// Esperar respuesta del sensor
@@ -94,6 +95,10 @@ uint8_t pulsoInicio(){
 	_delay_us(80);
 	if (!(PINC & (1 << DHT11_PIN))) {
 		return 0; // Si el pin sigue bajo, hay un error
+	}
+	_delay_us(80);
+	if ((PINC & (1 << DHT11_PIN))) {
+		return 0; // Si el pin sigue alto, hay un error
 	}
 	// Se inició correctamente el sensor
 	return 1;
