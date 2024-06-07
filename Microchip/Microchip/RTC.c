@@ -31,7 +31,7 @@ void RTC_init(void){
 //prueba
 void DebbugT(tiempo t){
 	char  msg1[50];
-	sprintf(msg1, "Datos obtenidos: %02d, %02d, %04d, %02d, %02d, %02d // ", t.dia, t.mes, t.anio, t.hora, t.minuto, t.segundo);
+	sprintf(msg1, "Datos obtenidos: %02d, %02d, %04d, %02d, %02d, %02d\r", t.dia, t.mes, t.anio, t.hora, t.minuto, t.segundo);
 	SerialPort_Wait_For_TX_Buffer_Free();
 	SerialPort_Send_String(msg1);
 }
