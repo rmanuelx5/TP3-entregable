@@ -5,75 +5,68 @@
  *  Author: Barcala
  */ 
 
-#include "RTC.h"
 
+#include "rtc.h"
 
-//prototipos de funciones internas
-unsigned char RTC_read(unsigned char);
-void RTC_start(void);
-void RTC_stop(void);
-void mandarACK(unsigned char);
-
-
-
-
-void RTC_init(void){
-	TWSR=0x00;	//prescaler en 0
-	TWBR=152;	//frecuencia de scl
-	TWCR=0x04;	//enciende TWI
-	
-	//prueba
-	
-	SerialPort_Init(BR9600);  // Inicializo formato 8N1 y BAUDRATE = 9600bps
-	SerialPort_TX_Enable();   // Activo el Transmisor del Puerto Serie
-	SerialPort_RX_Enable();   // Activo el Receptor del Puerto Serie
-}
-//prueba
-void DebbugT(tiempo t){
-	char  msg1[50];
-	sprintf(msg1, "Datos obtenidos: %02d, %02d, %04d, %02d, %02d, %02d\r", t.dia, t.mes, t.anio, t.hora, t.minuto, t.segundo);
-	SerialPort_Wait_For_TX_Buffer_Free();
-	SerialPort_Send_String(msg1);
+// Funciones auxiliares (estáticas, solo accesibles dentro de este archivo)
+static uint8_t bcd_to_dec(uint8_t val) {
+	return ((val / 16 * 10) + (val % 16));
 }
 
-void RTC_start(void){
-	TWCR = (1 << TWINT) | (1 << TWSTA) | (1 << TWEN);
-	while ((TWCR & (1<<TWINT)) == 0);
+static uint8_t dec_to_bcd(uint8_t val) {
+	return ((val / 10 * 16) + (val % 10));
 }
 
-unsigned char RTC_read (uint8_t ultimo){
-	
-	mandarACK(ultimo);
-	
-	while ((TWCR & (1 << TWINT)) == 0);
+static void rtc_write_register(uint8_t reg, uint8_t value) {
+	TWCR = (1 << TWINT) | (1 << TWSTA) | (1 << TWEN); // START
+	while (!(TWCR & (1 << TWINT)));
+	TWDR = DS3232_ADDR << 1; // Dirección de escritura
+	TWCR = (1 << TWINT) | (1 << TWEN);
+	while (!(TWCR & (1 << TWINT)));
+	TWDR = reg; // Registro a escribir
+	TWCR = (1 << TWINT) | (1 << TWEN);
+	while (!(TWCR & (1 << TWINT)));
+	TWDR = value; // Valor a escribir
+	TWCR = (1 << TWINT) | (1 << TWEN) | (1 << TWSTO); // STOP
+}
+
+static uint8_t rtc_read_register(uint8_t reg) {
+	rtc_write_register(reg, 0); // Dummy write para seleccionar el registro
+	TWCR = (1 << TWINT) | (1 << TWSTA) | (1 << TWEN); // Repetir START
+	while (!(TWCR & (1 << TWINT)));
+	TWDR = (DS3232_ADDR << 1) | 1; // Dirección de lectura
+	TWCR = (1 << TWINT) | (1 << TWEN);
+	while (!(TWCR & (1 << TWINT)));
+	TWCR = (1 << TWINT) | (1 << TWEN); // ACK después de la dirección
+	while (!(TWCR & (1 << TWINT)));
+	TWCR = (1 << TWINT) | (1 << TWEN) | (1 << TWSTO); // NACK y STOP
+	while ((TWCR & (1 << TWINT)));
 	return TWDR;
 }
 
-void RTC_stop (){
-	TWCR= (1 << TWINT)|(1 << TWEN) |(1 << TWSTO) ;
+// Funciones públicas de la biblioteca
+void rtcInit(void) {
+	TWBR = 12; // Ajustar según la velocidad de reloj (400kHz en este caso)
+	TWCR = (1 << TWEN); // Habilitar TWI
 }
 
-tiempo getTime(){
+void setTime(const tiempo *t) {
+	rtc_write_register(DS3232_TIME, dec_to_bcd(t->segundo));
+	rtc_write_register(DS3232_TIME + 1, dec_to_bcd(t->minuto));
+	rtc_write_register(DS3232_TIME + 2, dec_to_bcd(t->hora));
+	rtc_write_register(DS3232_TIME + 4, dec_to_bcd(t->dia));
+	rtc_write_register(DS3232_TIME + 5, dec_to_bcd(t->mes));
+	rtc_write_register(DS3232_TIME + 6, dec_to_bcd(t->anio));
+}
+
+tiempo getTime(void) {
 	tiempo t;
-	RTC_start();
-	
-	t.segundo = RTC_read(0);
-	t.minuto = RTC_read(1);
-	t.hora = RTC_read(2);
-	//read(3) es el dia de la semana
-	t.dia = RTC_read(4);
-	t.mes = RTC_read(5);
-	t.anio = RTC_read(6);
-	
-	DebbugT(t);
-	RTC_stop();
-	
+	t.segundo = bcd_to_dec(rtc_read_register(DS3232_TIME));
+	t.minuto = bcd_to_dec(rtc_read_register(DS3232_TIME + 1));
+	t.hora   = bcd_to_dec(rtc_read_register(DS3232_TIME + 2));
+	t.dia   = bcd_to_dec(rtc_read_register(DS3232_TIME + 4));
+	t.mes   = bcd_to_dec(rtc_read_register(DS3232_TIME + 5));
+	t.anio   = bcd_to_dec(rtc_read_register(DS3232_TIME + 6));
 	return t;
-}
-
-void mandarACK(uint8_t ultimo){
-	if (ultimo < 6) //send ACK
-		TWCR=(1 << TWINT)|(1 << TWEN) |(1 << TWEA) ; //send ACK
-	else
-		TWCR= (1 << TWINT) |(1 << TWEN) ; //send NACK
+	
 }

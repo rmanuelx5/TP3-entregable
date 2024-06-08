@@ -44,18 +44,27 @@ int main(void)
 	
 	tiempo t;
 	
+	uint8_t ultImpr = -1;
+	
 	volatile char dato = 0;
 	
 	SerialPort_Init(BR9600); 		// Inicializo formato 8N1 y BAUDRATE = 9600bps
 	SerialPort_TX_Enable();			// Activo el Transmisor del Puerto Serie
 	SerialPort_RX_Enable();			// Activo el Receptor del Puerto Serie
 		
-	RTC_init();	
-		
+	rtcInit();	
+	t.hora = 2;
+	t.minuto = 24;
+	t.segundo = 23;
+	t.anio = 2006;
+	t.dia = 23;
+	t.mes = 2;
+	setTime(&t);
 	while(1)
 	{
 		verificacion = DHTRead(&temperatura, &humedad);
-		t= getTime();
+		t = getTime();
+	
 		
 		//sprintf(msg1, "TEMP: %02d °C HUM: %02d%% FECHA: %02d/%02d/%02d HORA:%02d:%02d:%03d\r\n", temperatura, humedad, t.dia, t.mes, t.anio, t.hora, t.minuto, t.segundo);
 		
@@ -63,9 +72,10 @@ int main(void)
 		//verif = 0 hay error, verif=1 se lee correctamente
 		if (verificacion){
 			
-				if(t.segundo % 2){
-					sprintf(msg1, "TEMP: %02d °C HUM: %02d%% FECHA: %02d/%02d/%02d HORA:%02d:%02d:%03d\r\n", temperatura, humedad, t.dia, t.mes, t.anio, t.hora, t.minuto, t.segundo);
-					//sprintf(msg1, "TEMP: %02d °C HUM: %02d\% \r \n ", temperatura, humedad);
+				if(!(t.segundo % 2) && ultImpr != t.segundo){
+					ultImpr = t.segundo;
+					sprintf(msg1, "TEMP: %02d °C HUM: %02d%% FECHA: %02d/%02d/%02d HORA:%02d:%02d:%02d\r\n", temperatura, humedad, t.dia, t.mes, t.anio, t.hora, t.minuto, t.segundo);
+
 					SerialPort_Wait_For_TX_Buffer_Free(); // Espero a que el canal de transmisión este libre (bloqueante)
 					SerialPort_Send_String(msg1);
 				}
@@ -75,8 +85,8 @@ int main(void)
 		}
 				
 		//leo tecla en terminal
-		SerialPort_Wait_Until_New_Data();	 
-		dato = SerialPort_Recive_Data();
+// 		SerialPort_Wait_Until_New_Data();	 
+// 		dato = SerialPort_Recive_Data();
 
 		// Si presionan 's' o 'S' se termina o reanuda el informe en consola
 		if( dato == 's' || dato == 'S' )
