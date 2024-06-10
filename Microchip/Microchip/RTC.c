@@ -31,22 +31,23 @@ static void rtc_write_register(uint8_t reg, uint8_t value) {
 }
 
 static uint8_t rtc_read_register(uint8_t reg) {
-	rtc_write_register(reg, 0); // Dummy write para seleccionar el registro
+	rtc_write_register(reg, 0);
 	TWCR = (1 << TWINT) | (1 << TWSTA) | (1 << TWEN); // Repetir START
 	while (!(TWCR & (1 << TWINT)));
 	TWDR = (DS3232_ADDR << 1) | 1; // Dirección de lectura
 	TWCR = (1 << TWINT) | (1 << TWEN);
 	while (!(TWCR & (1 << TWINT)));
-	TWCR = (1 << TWINT) | (1 << TWEN); // ACK después de la dirección
+	TWCR = (1 << TWINT) | (1 << TWEN); // mando ACK
 	while (!(TWCR & (1 << TWINT)));
 	TWCR = (1 << TWINT) | (1 << TWEN) | (1 << TWSTO); // NACK y STOP
 	while ((TWCR & (1 << TWINT)));
 	return TWDR;
 }
 
-// Funciones públicas de la biblioteca
+
+
 void rtcInit(void) {
-	TWBR = 12; // Ajustar según la velocidad de reloj (400kHz en este caso)
+	TWBR = 12; // velocidad de reloj
 	TWCR = (1 << TWEN); // Habilitar TWI
 }
 
@@ -58,15 +59,16 @@ void setTime(const tiempo *t) {
 	rtc_write_register(DS3232_TIME + 5, dec_to_bcd(t->mes));
 	rtc_write_register(DS3232_TIME + 6, dec_to_bcd(t->anio));
 }
+//orden 0 seg, 1 min, 2 hora, 3 dia (no usamos), 4 dia, 5 mes, 6 año-
 
 tiempo getTime(void) {
 	tiempo t;
 	t.segundo = bcd_to_dec(rtc_read_register(DS3232_TIME));
 	t.minuto = bcd_to_dec(rtc_read_register(DS3232_TIME + 1));
-	t.hora   = bcd_to_dec(rtc_read_register(DS3232_TIME + 2));
-	t.dia   = bcd_to_dec(rtc_read_register(DS3232_TIME + 4));
-	t.mes   = bcd_to_dec(rtc_read_register(DS3232_TIME + 5));
-	t.anio   = bcd_to_dec(rtc_read_register(DS3232_TIME + 6));
+	t.hora = bcd_to_dec(rtc_read_register(DS3232_TIME + 2));
+	t.dia = bcd_to_dec(rtc_read_register(DS3232_TIME + 4));
+	t.mes = bcd_to_dec(rtc_read_register(DS3232_TIME + 5));
+	t.anio = bcd_to_dec(rtc_read_register(DS3232_TIME + 6));
 	return t;
 	
 }
