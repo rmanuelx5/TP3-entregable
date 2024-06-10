@@ -53,12 +53,13 @@ uint8_t DHTRead(uint8_t *temperatura, uint8_t *humedad){
 			}
 		}
 	} else {
-		return 0; // Si pulsoInicio falla, retorna 0
+		return 1; // Si pulsoInicio falla, retorna 0
 	}
 
 	//Debbug(lectura);
 	
 	uint8_t checksum = lectura[0] + lectura[1] + lectura[2] + lectura[3];
+	
 	if (checksum != lectura[4]) {
 		return 0; // Error en la lectura
 	}
@@ -88,11 +89,11 @@ uint8_t pulsoInicio(){
 	if (PINC & (1 << DHT11_PIN)) {
 		return 0; // Si el pin sigue alto, hay un error
 	}
-	_delay_us(80);
+	_delay_us(85);
 	if (!(PINC & (1 << DHT11_PIN))) {
 		return 0; // Si el pin sigue bajo, hay un error
 	}
-	_delay_us(80);
+	_delay_us(85);
 	if ((PINC & (1 << DHT11_PIN))) {
 		return 0; // Si el pin sigue alto, hay un error
 	}
@@ -104,7 +105,7 @@ uint8_t pulsoInicio(){
 uint8_t leerBit(){
 	uint8_t contador = 0;
 	while (!(PINC & (1 << DHT11_PIN))); // Esperar a que el pin se ponga alto
-	_delay_us(30);  // Esperar 30us para estar en la mitad del pulso alto
+	_delay_us(35);  // Esperar 30us para estar en la mitad del pulso alto
 	
 	if (PINC & (1 << DHT11_PIN)) {
 		// Si el pin sigue alto, el bit es 1

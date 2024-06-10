@@ -42,11 +42,8 @@ int main(void)
 	uint8_t temperatura;
 	uint8_t humedad;
 	uint8_t verificacion;
-	
 	tiempo t;
-	
 	uint8_t ultImpr = -1;
-	
 	
 	SerialPort_Init(BR9600); 		// Inicializo formato 8N1 y BAUDRATE = 9600bps
 	SerialPort_TX_Enable();			// Activo el Transmisor del Puerto Serie
@@ -55,18 +52,13 @@ int main(void)
 	sei();
 		
 	rtcInit();	
-	t.hora = 2;
-	t.minuto = 24;
-	t.segundo = 23;
-	t.anio = 2006;
-	t.dia = 23;
-	t.mes = 2;
-	setTime(&t);
 	
  	while(1){
 		
 		if(RX_Buffer){ // recepción NO Bloqueante
-			// Si presionan 's' se termina el programa
+			//verificacion que RX_BUFFER tiene un solo caracter
+			if(RX_Buffer > 256) 
+				RX_Buffer = UDR0;
 			if(RX_Buffer == 's' || RX_Buffer == 'S'){
 				if (activo){
 					activo= 0;
@@ -88,21 +80,23 @@ int main(void)
 			verificacion = DHTRead(&temperatura, &humedad);
 			t = getTime();
 			
-			if (verificacion){
 			
-					if(!(t.segundo % 2) && ultImpr != t.segundo){
-						ultImpr = t.segundo;
-						sprintf(msg1, "TEMP: %02d °C HUM: %02d%% FECHA: %02d/%02d/%02d HORA:%02d:%02d:%02d\r\n", temperatura, humedad, t.dia, t.mes, t.anio, t.hora, t.minuto, t.segundo);
-
-						SerialPort_Wait_For_TX_Buffer_Free(); // Espero a que el canal de transmisión este libre (bloqueante)
-						SerialPort_Send_String(msg1);
-					}
+			if(!(t.segundo % 2) && ultImpr != t.segundo){
+					
+				if (verificacion){
+					ultImpr = t.segundo;
+					sprintf(msg1, "TEMP: %02d °C HUM: %02d%% FECHA: %02d/%02d/%02d HORA:%02d:%02d:%02d\r\n", temperatura, humedad, t.dia, t.mes, t.anio, t.hora, t.minuto, t.segundo);
+					SerialPort_Wait_For_TX_Buffer_Free(); // Espero a que el canal de transmisión este libre (bloqueante)
+					SerialPort_Send_String(msg1);
 				}
-			else {
-				sprintf(msg1, "error en dht");
-				SerialPort_Wait_For_TX_Buffer_Free();  // Espero a que el canal de transmisión esté libre (bloqueante)
-				SerialPort_Send_String(msg1);
+				else {
+					sprintf(msg1, "Error en dht \r\n");
+					SerialPort_Wait_For_TX_Buffer_Free();  // Espero a que el canal de transmisión esté libre (bloqueante)
+					SerialPort_Send_String(msg1);
+					
+				}
 			}
+			
 		}
 				
 		//leo tecla en terminal
