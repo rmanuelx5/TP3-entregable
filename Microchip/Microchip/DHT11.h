@@ -20,6 +20,6 @@
 #define BR9600 (0x67)	// 0x67=103 configura BAUDRATE=9600@16MHz
 
 uint8_t DHTRead(uint8_t *temperatura, uint8_t *humedad);
-
+void DHT11_Init(void);
 
 #endif /* DHT11_H_ */

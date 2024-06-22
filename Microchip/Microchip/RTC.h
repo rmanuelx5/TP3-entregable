@@ -31,7 +31,6 @@ typedef struct {
 
 // Prototipos de funciones
 void rtcInit(void);
-void setTime(const tiempo *t);
 tiempo getTime(void);
 
 #endif

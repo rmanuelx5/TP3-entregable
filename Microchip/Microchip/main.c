@@ -4,23 +4,7 @@
  * Created: 28/5/2024 21:19:47
  * Author : manuc
  */ 
-/*
-#include <avr/io.h>
-#include "serialPort.h"
-#include "RTC.h"
-#include "DHT11.h"
-//#include "timer.h" esta en duda su uso
-int main(void)
-{
-	SerialPort_Init();
-    
-    while (1) 
-    {
-		
-    }
-}
 
-*/
 #define F_CPU 16000000UL
 #include <avr/io.h>
 #include <stdio.h>
@@ -39,26 +23,29 @@ volatile char RX_Buffer=0;
 
 int main(void)	
 {	
+	//variables a utilizar
 	uint8_t temperatura;
 	uint8_t humedad;
 	uint8_t verificacion;
 	tiempo t;
 	uint8_t ultImpr = -1;
 	
+	//inicializacion de periféricos
 	SerialPort_Init(BR9600); 		// Inicializo formato 8N1 y BAUDRATE = 9600bps
 	SerialPort_TX_Enable();			// Activo el Transmisor del Puerto Serie
 	SerialPort_RX_Enable();			// Activo el Receptor del Puerto Serie
 	SerialPort_RX_Interrupt_Enable();	// Activo Interrupción de recepcion.
 	sei();
 		
+	DHT11_Init();
 	rtcInit();	
 	
+	
+	//bucle infinito
  	while(1){
 		
-		if(RX_Buffer){ // recepción NO Bloqueante
-			//verificacion que RX_BUFFER tiene un solo caracter
-			if(RX_Buffer > 256) 
-				RX_Buffer = UDR0;
+		if(RX_Buffer){ // recepción no bloqueante de datos
+			
 			if(RX_Buffer == 's' || RX_Buffer == 'S'){
 				if (activo){
 					activo= 0;
@@ -80,7 +67,6 @@ int main(void)
 			verificacion = DHTRead(&temperatura, &humedad);
 			t = getTime();
 			
-			
 			if(!(t.segundo % 2) && ultImpr != t.segundo){
 					
 				if (verificacion){
@@ -96,29 +82,9 @@ int main(void)
 					
 				}
 			}
-			
 		}
-				
-		//leo tecla en terminal
-// 		SerialPort_Wait_Until_New_Data();	 
-// 		dato = SerialPort_Recive_Data();
-
-		// Si presionan 's' o 'S' se termina o reanuda el informe en consola
-// 		if( dato == 's' || dato == 'S' )
-// 		{
-// 			activo = ~activo;
-// 			// toggle activo
-// 		}	
-		/*else
-		{				
-			SerialPort_Wait_For_TX_Buffer_Free(); // Espero a que el canal de transmisión este libre (bloqueante)
-			//cada 2 segundos mando a terminal
-			
-			SerialPort_Send_String(msg1);    
-		}*/
 	}
 	return 0;
-
 }
 
 // Rutina de Servicio de Interrupción de Byte Recibido
